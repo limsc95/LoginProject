@@ -1,4 +1,4 @@
 package org;
 
-public class ZipBean {
+public class ZipBean {//test
 }
