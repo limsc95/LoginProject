@@ -232,7 +232,7 @@
     function sub(){
         let idChecked=document.getElementById("idChecked");
 
-        if(idChecked==0){
+        if(idChecked.value==0){
             alert("아이디 중복체크가 안되었습니다.\n중복체크 후 다시 시도해주세요.");
             return false;
         }else{
