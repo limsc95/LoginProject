@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <meta charset="UTF-8">
     <title>회원 가입</title>
     <style>
@@ -41,11 +43,11 @@
             margin: 2px 0;
         }
 
-        #birthdate {
+        #birth {
             width: 200px;
         }
 
-        #postal {
+        #zipcode {
             width: 150px;
         }
         select {
@@ -69,7 +71,7 @@
             margin-right: 20px;
         }
 
-        #userid {
+        #id {
             width: 250px;
         }
     </style>
@@ -77,21 +79,22 @@
 <body>
 <div class="container">
     <h2>회원 가입</h2>
-    <form action="login.jsp" method="post">
+    <form action="memberProc.jsp" method="post" onsubmit="return sub()">
         <div class="form-group">
-            <label for="userid" class="required">아이디</label>
-            <input type="text" id="userid" name="userid" required>
+            <label for="id" class="required">아이디</label>
+            <input type="text" id="id" name="id" required>
             <button type="button" onclick="checkId()">ID중복확인</button>
         </div>
+        <input type="hidden" id="idChecked" name="idChecked" value="0">
 
         <div class="form-group">
-            <label for="password" class="required">비밀번호</label>
-            <input type="password" id="password" name="password" required>
+            <label for="pwd1" class="required">비밀번호</label>
+            <input type="password" id="pwd1" name="pwd1" required>
         </div>
 
         <div class="form-group">
-            <label for="password2" class="required">비밀번호 확인</label>
-            <input type="password" id="password2" name="password2" required>
+            <label for="pwd2" class="required">비밀번호 확인</label>
+            <input type="password" id="pwd2" name="pwd2" required>
         </div>
 
         <div class="form-group">
@@ -108,8 +111,8 @@
         </div>
 
         <div class="form-group">
-            <label for="birthdate" class="required">생년월일</label>
-            <input type="text" id="birthdate" name="birthdate" required>
+            <label for="birth" class="required">생년월일</label>
+            <input type="text" id="birth" name="birth" required>
             <span style="margin-left: 10px; font-size: 14px;"> ex) 900323</span>
         </div>
 
@@ -119,8 +122,8 @@
         </div>
 
         <div class="form-group">
-            <label for="postal">우편번호</label>
-            <input type="text" id="postal" name="postal">
+            <label for="zipcode">우편번호</label>
+            <input type="text" id="zipcode" name="zipcode">
             <button type="button" onclick="findPostal()">우편번호 찾기</button>
         </div>
 
@@ -165,14 +168,76 @@
 </div>
 
 <script>
+    let idCheck=false;
     function checkId() {
-        alert("중복아이디 체크");
-        location.href="idCheck.jsp";
+        // 입력된 아이디 가져오기
+        let id = document.getElementById("id").value;
+
+        // 새 창 띄우기
+        var popupWidth = 500;
+        var popupHeight = 300;
+        var leftPosition = (window.screen.width - popupWidth) / 2;
+        var topPosition = (window.screen.height - popupHeight) / 2;
+
+        var checkWindow = window.open("about:blank", "IdCheck",
+            "width=" + popupWidth +
+            ",height=" + popupHeight +
+            ",left=" + leftPosition +
+            ",top=" + topPosition);
+
+        // Ajax 요청
+        $.ajax({
+            url: 'idCheck.jsp',
+            type: 'POST',
+            data: { id: id },
+            success: function(response) {
+                var html = '<html><head><title>ID 중복체크</title>';
+                html += '<style>';
+                html += 'body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }';
+                html += 'p { margin: 20px 0; }';
+                html += 'button { padding: 5px 15px; margin: 5px; cursor: pointer; }';
+                html += '</style>';
+                html += '</head><body>';
+
+                if (response.message === "이미 사용중인 아이디입니다.") {
+                    html += '<p>' + response.message + '</p>';
+                    html += '<button onclick="window.close()">닫기</button>';
+                } else {
+                    html += '<p>"' + id + '" 는 ' + response.message + '</p>';
+                    html += '<button onclick="window.opener.document.getElementById(\'id\').readOnly = true; window.opener.document.getElementById(\'idChecked\').value = \'1\'; window.close();">사용하기</button>';
+                    html += '<button onclick="window.close()">닫기</button>';
+                }
+
+                html += '</body></html>';
+                checkWindow.document.write(html);
+            },
+            error: function() {
+                checkWindow.close();
+                alert('서버 통신 오류가 발생했습니다.');
+            }
+        });
     }
 
     function findPostal() {
-        alert("주소찾기");
-        location.href="zip.jsp";
+        new daum.Postcode({
+            oncomplete: function(data) {
+                let zipcode=document.getElementById("zipcode");
+                let address=document.getElementById("address");
+                zipcode.value=data.zonecode;
+                address.value=data.address;
+            }
+        }).open();
+    }
+
+    function sub(){
+        let idChecked=document.getElementById("idChecked");
+
+        if(idChecked==0){
+            alert("아이디 중복체크가 안되었습니다.\n중복체크 후 다시 시도해주세요.");
+            return false;
+        }else{
+            return true;
+        }
     }
 </script>
 </body>
