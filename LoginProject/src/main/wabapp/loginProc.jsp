@@ -12,7 +12,7 @@
 %>
 <script>
     alert('로그인에 성공했다');
-    window.location.href = 'welcome.jsp';
+    window.location.href = 'memberProc.jsp';
 </script>
 <%
 } else {
